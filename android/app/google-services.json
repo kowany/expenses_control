@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "964692699687",
+    "firebase_url": "https://expenses-control-villaverde.firebaseio.com",
+    "project_id": "expenses-control-villaverde",
+    "storage_bucket": "expenses-control-villaverde.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964692699687:android:0b68d48025478b1f5ffc02",
+        "android_client_info": {
+          "package_name": "com.example.expenses_control_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "964692699687-36f75q8hhmkccvqkok4ks8saau693g2i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.expenses_control_app",
+            "certificate_hash": "16f858a40182e76f591c2eb421f8ecb8dbfaa455"
+          }
+        },
+        {
+          "client_id": "964692699687-4joc0vegaivgn65cphtucbnh7hsicnt2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGUN4AIPoXEN8xwnhuynD-gMvKl-TiVF8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "964692699687-4joc0vegaivgn65cphtucbnh7hsicnt2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
