@@ -179,6 +179,8 @@ class _AddPageState extends State<AddPage> {
     );
   }
   Widget _submit( ) {
+    // El Builder proporciona un contexto
+    // completo sin un método build
     return Builder(
       builder: ( BuildContext context ) {
         return Container(
@@ -203,7 +205,7 @@ class _AddPageState extends State<AddPage> {
                   .document()
                   .setData({
                     'category': category,
-                    'value': value,
+                    'value': value / 100.0,
                     'month': DateTime.now().month,
                     'day': DateTime.now().day
                   });

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:expenses_control_app/login_state.dart';
+
 import 'package:expenses_control_app/month_widget.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,11 +36,11 @@ class _HomePageState extends State<HomePage> {
   }
 
 
-  Widget _bottomAction( IconData icon ) {
+  Widget _bottomAction( IconData icon, Function callback ) {
     // el widget InkWell permite que al presionar un botón haga el efecto de onda
     return InkWell(
       child: Icon( icon ),
-      onTap: () {},
+      onTap: callback,
     );
   }
 
@@ -50,11 +54,13 @@ class _HomePageState extends State<HomePage> {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            _bottomAction( FontAwesomeIcons.history ),
-            _bottomAction( FontAwesomeIcons.chartPie ),
+            _bottomAction( FontAwesomeIcons.history, () {} ),
+            _bottomAction( FontAwesomeIcons.chartPie, () {} ),
             SizedBox( width: 48.0 ),
-            _bottomAction( FontAwesomeIcons.wallet ),
-            _bottomAction( Icons.settings ),
+            _bottomAction( FontAwesomeIcons.wallet, () {} ),
+            _bottomAction( Icons.settings, () {
+              Provider.of<LoginState>(context, listen: false).logout();
+            } ),
           ],
         ),
       ),
