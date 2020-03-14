@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:expenses_control_app/login_state.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 
 import '../category_selection_widget.dart';
 
@@ -199,8 +201,12 @@ class _AddPageState extends State<AddPage> {
               ),
             ),
             onPressed: () {
-              if ( value > 0 && category != '' ) {
+              var user = Provider.of<LoginState>(context, listen: false).currentUser;
+
+              if ( value > 0 && category != null ) {
                 Firestore.instance
+                  .collection( 'users' )
+                  .document( user.uid )
                   .collection( 'expenses' )
                   .document()
                   .setData({

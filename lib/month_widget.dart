@@ -12,10 +12,10 @@ class MonthWidget extends StatefulWidget {
 
   // para inicializar una variable de tipo final lo podemos
   // realizar desde el constructor, antes de llamar al padre ( super )
-  MonthWidget({Key key, this.documents }) :
+  MonthWidget({Key key, this.documents, days }) :
     total = documents.map(( doc ) => doc['value'] )
                      .fold( 0.0, (previousValue, element) => previousValue + element ),
-    perDay = List.generate( 30, ( int index ) {
+    perDay = List.generate( days, ( int index ) {
       return documents.where(( doc ) => doc[ 'day' ] == ( index + 1 )  )
                 .map(( doc ) => doc['value'] )
                 .fold( 0.0, (previousValue, element) => previousValue + element );

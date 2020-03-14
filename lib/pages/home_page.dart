@@ -1,3 +1,4 @@
+import 'package:expenses_control_app/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +17,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   PageController _controller;
-  int curremtPage = 2;
+  int currentPage = DateTime.now().month - 1;
   Stream< QuerySnapshot > _query;
 
 
@@ -24,13 +25,10 @@ class _HomePageState extends State<HomePage> {
   void initState() { 
     super.initState();
     
-    _query = Firestore.instance
-              .collection('expenses')
-              .where("month", isEqualTo: curremtPage + 1 )
-              .snapshots();
+    
     
     _controller = PageController(
-      initialPage: curremtPage,
+      initialPage: currentPage,
       viewportFraction: 0.3
     );
   }
@@ -46,32 +44,39 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: BottomAppBar(
-        notchMargin: 8.0,
-        shape: CircularNotchedRectangle(),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            _bottomAction( FontAwesomeIcons.history, () {} ),
-            _bottomAction( FontAwesomeIcons.chartPie, () {} ),
-            SizedBox( width: 48.0 ),
-            _bottomAction( FontAwesomeIcons.wallet, () {} ),
-            _bottomAction( Icons.settings, () {
-              Provider.of<LoginState>(context, listen: false).logout();
-            } ),
-          ],
+          var user = Provider.of<LoginState>(context, listen: false ).currentUser;
+                  _query = Firestore.instance
+                        .collection( 'users' )
+                        .document( user.uid )
+                        .collection( 'expenses' )
+                        .where("month", isEqualTo: currentPage + 1 )
+                        .snapshots();
+      return Scaffold(
+        bottomNavigationBar: BottomAppBar(
+          notchMargin: 8.0,
+          shape: CircularNotchedRectangle(),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              _bottomAction( FontAwesomeIcons.history, () {} ),
+              _bottomAction( FontAwesomeIcons.chartPie, () {} ),
+              SizedBox( width: 48.0 ),
+              _bottomAction( FontAwesomeIcons.wallet, () {} ),
+              _bottomAction( Icons.settings, () {
+                Provider.of<LoginState>(context, listen: false).logout();
+              } ),
+            ],
+          ),
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        child: Icon( Icons.add ),
-        onPressed: () {
-          Navigator.of( context ).pushNamed( '/add' );
-        }
-      ),
-      body: _body(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: FloatingActionButton(
+          child: Icon( Icons.add ),
+          onPressed: () {
+            Navigator.of( context ).pushNamed( '/add' );
+          }
+        ),
+        body: _body(),
     );
   }
 
@@ -90,6 +95,7 @@ class _HomePageState extends State<HomePage> {
                 );
               } else {
                 return MonthWidget(
+                  days: daysInMonth( currentPage + 1),
                   documents: data.data.documents 
                 );
               }
@@ -115,9 +121,9 @@ class _HomePageState extends State<HomePage> {
       color: Colors.blueGrey.withOpacity(0.4),
     );
 
-    if ( position == curremtPage ) {
+    if ( position == currentPage ) {
       _alignment = Alignment.center;
-    } else if ( position > curremtPage ) {
+    } else if ( position > currentPage ) {
       _alignment = Alignment.centerRight;
     } else {
       _alignment = Alignment.centerLeft;
@@ -128,7 +134,7 @@ class _HomePageState extends State<HomePage> {
       alignment: _alignment,
       child: Text( 
         name,
-        style: position == curremtPage ? selected : unselected,
+        style: position == currentPage ? selected : unselected,
        )
     );
   }
@@ -139,10 +145,13 @@ class _HomePageState extends State<HomePage> {
       child: PageView(
         onPageChanged: ( newPage ) {
           setState(() {
-            curremtPage = newPage;
+            var user = Provider.of<LoginState>( context, listen: false).currentUser;
+            currentPage = newPage;
             _query = Firestore.instance
+                      .collection('users')
+                      .document( user.uid )
                       .collection('expenses')
-                      .where("month", isEqualTo: curremtPage + 1 )
+                      .where("month", isEqualTo: currentPage + 1 )
                       .snapshots();
           });
         },

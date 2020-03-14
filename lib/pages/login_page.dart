@@ -8,13 +8,22 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: RaisedButton(
-          child: Text(
-            'Sign in'
-          ),
-          onPressed: () {
-            Provider.of<LoginState>( context, listen: false ).login();
+        child: Consumer<LoginState>(
+          builder: (BuildContext context, LoginState value, Widget child) { 
+            if ( value.isLoding ) {
+              return CircularProgressIndicator();
+            } else {
+              return child;
+            }
           },
+          child: RaisedButton(
+            child: Text(
+              'Sign in'
+            ),
+            onPressed: () {
+              Provider.of<LoginState>( context, listen: false ).login();
+            },
+          ),
         )
       ),
     );
