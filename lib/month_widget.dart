@@ -1,7 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expenses_control_app/graph_widget.dart';
+import 'package:expenses_control_app/pages/details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+enum GraphType {
+  LINES,
+  PIE
+}
 
 class MonthWidget extends StatefulWidget {
 
@@ -9,10 +15,13 @@ class MonthWidget extends StatefulWidget {
   final double total;
   final List<double> perDay;
   final Map< String, double > categories;
+  final GraphType graphType;
+  final int month;
 
   // para inicializar una variable de tipo final lo podemos
   // realizar desde el constructor, antes de llamar al padre ( super )
-  MonthWidget({Key key, this.documents, days }) :
+  MonthWidget({Key key, this.documents, days, @required this.month, this.graphType }) :
+
     total = documents.map(( doc ) => doc['value'] )
                      .fold( 0.0, (previousValue, element) => previousValue + element ),
     perDay = List.generate( days, ( int index ) {
@@ -80,17 +89,40 @@ class _MonthWidgetState extends State<MonthWidget> {
       ]
     );
   }
+
   Widget _graph() {
-    return Container(
-      height: 250.0,
-      child: GraphWidget(
-        data: widget.perDay
-      )
-    );
+    if (widget.graphType == GraphType.LINES) {
+      return Container(
+        height: 250.0,
+        child: LinesGraphWidget(
+          data: widget.perDay,
+        ),
+      );
+    } else {
+      var perCategory = widget.categories.keys.map((valueCategory) => widget.categories[valueCategory] / widget.total).toList();
+      return Container(
+        height: 250.0,
+        child: PieGraphWidget(
+          data: perCategory,
+        ),
+      );
+    }
   }
+
+  // Widget _graph() {
+  //   return Container(
+  //     height: 250.0,
+  //     child: GraphWidget(
+  //       data: widget.perDay
+  //     )
+  //   );
+  // }
 
   Widget _item( IconData icon, String category, int percent, double value ) {
     return ListTile(
+      onTap: () {
+        Navigator.of(context).pushNamed( '/details', arguments: DetailsParams( category, widget.month ) );
+      },
       leading: Icon( icon, color: Colors.blueAccent, size: 32.0, ),
       title: Text(category),
       subtitle: Text( '$percent% of expenses' ),
