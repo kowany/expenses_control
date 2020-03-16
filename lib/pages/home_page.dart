@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:expenses_control_app/utils.dart';
-import 'package:expenses_control_app/add_page_transition.dart';
-import 'package:expenses_control_app/pages/add_page.dart';
 
 import 'package:expenses_control_app/login_state.dart';
 
@@ -21,22 +20,25 @@ class _HomePageState extends State<HomePage> {
 
   var globalKey = RectGetter.createGlobalKey();
   Rect buttonRect;
+
   PageController _controller;
   int currentPage = DateTime.now().month - 1;
   Stream< QuerySnapshot > _query;
   GraphType currentType = GraphType.LINES;
 
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void initState() { 
     super.initState();
     
-    
-    
     _controller = PageController(
       initialPage: currentPage,
       viewportFraction: 0.3
     );
+
+    setupNotificationPlugin();
+
   }
 
 
@@ -50,13 +52,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-          var user = Provider.of<LoginState>(context, listen: false ).currentUser;
-                  _query = Firestore.instance
-                        .collection( 'users' )
-                        .document( user.uid )
-                        .collection( 'expenses' )
-                        .where("month", isEqualTo: currentPage + 1 )
-                        .snapshots();
+      var user = Provider.of<LoginState>(context, listen: false ).currentUser;
+              _query = Firestore.instance
+                    .collection( 'users' )
+                    .document( user.uid )
+                    .collection( 'expenses' )
+                    .where("month", isEqualTo: currentPage + 1 )
+                    .snapshots();
       return Scaffold(
         bottomNavigationBar: BottomAppBar(
           notchMargin: 8.0,
@@ -90,14 +92,12 @@ class _HomePageState extends State<HomePage> {
             child: Icon( Icons.add ),
             onPressed: () {
               buttonRect = RectGetter.getRectFromKey( globalKey );
-              print( buttonRect );
-              var page = AddPageTransition(
-                background: widget,
-                page: AddPage(
-                  buttonRect: buttonRect,
-                )
-              );
-              Navigator.of( context ).push( page );
+              // var page = AddPageTransition(
+              //   page: AddPage(
+              //     buttonRect: buttonRect,
+              //   )
+              // );
+              Navigator.of( context ).pushNamed( '/add', arguments: buttonRect );
             }
           ),
         ),
@@ -115,18 +115,35 @@ class _HomePageState extends State<HomePage> {
             builder: ( BuildContext context, AsyncSnapshot < QuerySnapshot > data ) {
 
               if ( data.connectionState == ConnectionState.waiting ) {
-                return Center(
-                  child: CircularProgressIndicator()
+                return Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator()
+                  ),
                 );
               } else {
-                return MonthWidget(
-                  days: daysInMonth( currentPage + 1),
-                  documents: data.data.documents,
-                  graphType: currentType,
-                  month: currentPage,
-                );
+                if ( data.data.documents.length > 0 ) {
+                  return MonthWidget(
+                    days: daysInMonth( currentPage + 1),
+                    documents: data.data.documents,
+                    graphType: currentType,
+                    month: currentPage,
+                  );
+                } else {
+                  return Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Image.asset( 'assets/no_data.png' ),
+                        SizedBox( height: 80.0 ),
+                        Text(
+                          'Add an expense to begin',
+                          style: Theme.of(context).textTheme.caption,
+                        )
+                      ],
+                    )
+                  );
+                }
               }
-
             }
           )
         ]
@@ -200,6 +217,132 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  
+  void setupNotificationPlugin() {
+
+    // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    var initializationSettingsAndroid =
+        new AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsIOS = new IOSInitializationSettings(
+      onDidReceiveLocalNotification: onDidReceiveLocalNotification,
+    );
+    var initializationSettings = new InitializationSettings(
+      initializationSettingsAndroid,
+      initializationSettingsIOS,
+    );
+
+    flutterLocalNotificationsPlugin
+        .initialize(
+      initializationSettings,
+      onSelectNotification: onSelectNotification,
+    )
+        .then((init) {
+      setupNotification();
+    });
+  }
+
+  Future onSelectNotification(String payload) async {
+    if (payload != null) {
+      debugPrint('notification payload: ' + payload);
+    }
+    await Navigator.push(
+      context,
+      new MaterialPageRoute(builder: (context) => HomePage()),
+    );
+  }
+
+  Future onDidReceiveLocalNotification(
+      int id, String title, String body, String payload) async {
+    // display a dialog with the notification details, tap ok to go to another page
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              content: Text("Don't forget to add your expenses"),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text('Ok'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ));
+  }
+
+  void setupNotification() async {
+    var time = new Time( 21, 51, 0);
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+        'daily-notifications', 'Daily Notifications', 'Daily Notifications');
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Spend-o-meter',
+        "Don't forget to add your expenses", time, platformChannelSpecifics);
+  }
+//   Future onSelectNotification(String payload) async {
+//     if (payload != null) {
+//       debugPrint('notification payload: ' + payload);
+//     }
+//     await Navigator.push(
+//       context,
+//       MaterialPageRoute(builder: (context) => HomePage()),
+//     );
+// }
+
+//   Future onDidReceiveLocalNotification(
+//       int id, String title, String body, String payload) async {
+//     // display a dialog with the notification details, tap ok to go to another page
+//     showDialog(
+//         context: context,
+//         builder: (context) => AlertDialog(
+//               content: Text( "Don't forget to add your expenses" ),
+//               actions: <Widget>[
+//                 FlatButton(
+//                   child: Text('Ok'),
+//                   onPressed: () {
+//                     Navigator.of(context).pop();
+//                   },
+//                 ),
+//               ],
+//             )
+//     );
+//   }
+
+
+//   void setupNotificationPlugin () async {
+    
+// // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+//     var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+//     var initializationSettingsIOS = IOSInitializationSettings(
+//         onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+//     var initializationSettings = InitializationSettings(
+//         initializationSettingsAndroid, initializationSettingsIOS);
+//     await flutterLocalNotificationsPlugin.initialize(
+//         initializationSettings,
+//         onSelectNotification: onSelectNotification
+//     ).then( ( init ) {
+//       setupNotification();
+//     });
+//   }
+
+//   void setupNotification() async{
+//     var time = new Time( 19, 45, 0 );
+//     var androidPlatformChannelSpecifics =
+//     AndroidNotificationDetails(
+//       'daily-notifications',
+//       'Daily Notifications',
+//       'Daily Notifications'
+//     );
+//     var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+//     var platformChannelSpecifics = NotificationDetails(
+//     androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+//     await flutterLocalNotificationsPlugin.showDailyAtTime(
+//       0,
+//       'Spend-o-meter',
+//       "Don't forget to add your expenses",
+//       time,
+//       platformChannelSpecifics
+//     );
+//   }
 
 }

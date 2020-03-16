@@ -300,7 +300,7 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
                 ),
                 onPressed: () {
                   var user = Provider.of<LoginState>(context, listen: false).currentUser;
-
+                  var today = DateTime.now();
                   if ( value > 0 && category != null ) {
                     Firestore.instance
                       .collection( 'users' )
@@ -310,14 +310,28 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
                       .setData({
                         'category': category,
                         'value': value / 100.0,
-                        'month': DateTime.now().month,
-                        'day': DateTime.now().day
+                        'month': today.month,
+                        'day': today.day,
+                        'year': today.year
                       });
                       Navigator.of( context ).pop();
                   } else {
-                      Scaffold.of(context).showSnackBar(
-                        SnackBar( content: Text( 'Enter a value and select a category' ) )
+                      showDialog(
+                        context: context,
+                        builder: ( context ) => AlertDialog(
+                          content: Text( 'Enter a value and select a category'),
+                          actions: <Widget>[
+                            FlatButton(
+                              child: Text( 'Ok' ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              }, 
+                            )
+                          ],                       )
                       );
+                      // Scaffold.of(context).showSnackBar(
+                      //   SnackBar( content: Text( 'Enter a value and select a category' ) )
+                      // );
                     }
                 }
               )

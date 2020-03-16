@@ -18,7 +18,7 @@ class LoginState extends ChangeNotifier {
     loginState();
   }
   bool get isLoggedIn => _loggedIn;
-  bool get isLoding => _loading;
+  bool get isLoading => _loading;
   FirebaseUser get currentUser => _user;
 
   void login () async {

@@ -1,3 +1,5 @@
+import 'package:expenses_control_app/add_page_transition.dart';
+import 'package:expenses_control_app/pages/add_page.dart';
 import 'package:expenses_control_app/pages/details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +35,15 @@ class _MyAppState extends State<MyApp> {
                 );
               },
             );
+          } else if ( settings.name == '/add' ) {
+              Rect buttonRect = settings.arguments;
+              return AddPageTransition(
+                page: AddPage(
+                  buttonRect: buttonRect,
+                )
+              );
+          } else {
+            return null;
           }
         },
         routes: {

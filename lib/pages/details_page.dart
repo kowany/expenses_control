@@ -40,7 +40,11 @@ class _DetailsPageState extends State<DetailsPage> {
       body: StreamBuilder<QuerySnapshot>(
         stream: _query,
         builder: ( BuildContext context, AsyncSnapshot<QuerySnapshot> data) {
-          if ( data.hasData ) {
+          if ( data.connectionState == ConnectionState.waiting ) {
+            return Center(
+                  child: CircularProgressIndicator(),
+                );
+          } else {
             return ListView.builder(
               itemBuilder: ( BuildContext context, int index ) {
                 var document = data.data.documents[ index ];
@@ -93,10 +97,9 @@ class _DetailsPageState extends State<DetailsPage> {
             },
             itemCount: data.data.documents.length,
           );
-
           }
         },
-        ),
-      );
+      ),
+    );
   }
 }
