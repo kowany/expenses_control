@@ -1,3 +1,4 @@
+import 'package:expenses_control_app/expenses_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
@@ -52,14 +53,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-      var user = Provider.of<LoginState>(context, listen: false ).currentUser;
-              _query = Firestore.instance
-                    .collection( 'users' )
-                    .document( user.uid )
-                    .collection( 'expenses' )
-                    .where("month", isEqualTo: currentPage + 1 )
-                    .snapshots();
-      return Scaffold(
+    return Consumer<ExpensesRepository>(
+      builder: ( BuildContext context, ExpensesRepository db, Widget child) {
+        _query = db.queryByMonth( currentPage + 1 );
+        return Scaffold(
         bottomNavigationBar: BottomAppBar(
           notchMargin: 8.0,
           shape: CircularNotchedRectangle(),
@@ -92,16 +89,13 @@ class _HomePageState extends State<HomePage> {
             child: Icon( Icons.add ),
             onPressed: () {
               buttonRect = RectGetter.getRectFromKey( globalKey );
-              // var page = AddPageTransition(
-              //   page: AddPage(
-              //     buttonRect: buttonRect,
-              //   )
-              // );
               Navigator.of( context ).pushNamed( '/add', arguments: buttonRect );
             }
           ),
         ),
         body: _body(),
+        );
+      }
     );
   }
 
@@ -189,14 +183,9 @@ class _HomePageState extends State<HomePage> {
       child: PageView(
         onPageChanged: ( newPage ) {
           setState(() {
-            var user = Provider.of<LoginState>( context, listen: false).currentUser;
+            var db = Provider.of<ExpensesRepository>( context, listen: false);
             currentPage = newPage;
-            _query = Firestore.instance
-                      .collection('users')
-                      .document( user.uid )
-                      .collection('expenses')
-                      .where("month", isEqualTo: currentPage + 1 )
-                      .snapshots();
+            db.queryByMonth( currentPage + 1 );
           });
         },
         controller: _controller,
@@ -252,7 +241,6 @@ class _HomePageState extends State<HomePage> {
 
   Future onDidReceiveLocalNotification(
       int id, String title, String body, String payload) async {
-    // display a dialog with the notification details, tap ok to go to another page
     showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -269,7 +257,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void setupNotification() async {
-    var time = new Time( 21, 51, 0);
+    var time = new Time( 10, 0, 0);
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'daily-notifications', 'Daily Notifications', 'Daily Notifications');
     var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
@@ -279,70 +267,4 @@ class _HomePageState extends State<HomePage> {
     await flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Spend-o-meter',
         "Don't forget to add your expenses", time, platformChannelSpecifics);
   }
-//   Future onSelectNotification(String payload) async {
-//     if (payload != null) {
-//       debugPrint('notification payload: ' + payload);
-//     }
-//     await Navigator.push(
-//       context,
-//       MaterialPageRoute(builder: (context) => HomePage()),
-//     );
-// }
-
-//   Future onDidReceiveLocalNotification(
-//       int id, String title, String body, String payload) async {
-//     // display a dialog with the notification details, tap ok to go to another page
-//     showDialog(
-//         context: context,
-//         builder: (context) => AlertDialog(
-//               content: Text( "Don't forget to add your expenses" ),
-//               actions: <Widget>[
-//                 FlatButton(
-//                   child: Text('Ok'),
-//                   onPressed: () {
-//                     Navigator.of(context).pop();
-//                   },
-//                 ),
-//               ],
-//             )
-//     );
-//   }
-
-
-//   void setupNotificationPlugin () async {
-    
-// // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-//     var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-//     var initializationSettingsIOS = IOSInitializationSettings(
-//         onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-//     var initializationSettings = InitializationSettings(
-//         initializationSettingsAndroid, initializationSettingsIOS);
-//     await flutterLocalNotificationsPlugin.initialize(
-//         initializationSettings,
-//         onSelectNotification: onSelectNotification
-//     ).then( ( init ) {
-//       setupNotification();
-//     });
-//   }
-
-//   void setupNotification() async{
-//     var time = new Time( 19, 45, 0 );
-//     var androidPlatformChannelSpecifics =
-//     AndroidNotificationDetails(
-//       'daily-notifications',
-//       'Daily Notifications',
-//       'Daily Notifications'
-//     );
-//     var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-//     var platformChannelSpecifics = NotificationDetails(
-//     androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-//     await flutterLocalNotificationsPlugin.showDailyAtTime(
-//       0,
-//       'Spend-o-meter',
-//       "Don't forget to add your expenses",
-//       time,
-//       platformChannelSpecifics
-//     );
-//   }
-
 }

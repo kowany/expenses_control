@@ -1,6 +1,7 @@
 import 'package:expenses_control_app/add_page_transition.dart';
+import 'package:expenses_control_app/expenses_repository.dart';
 import 'package:expenses_control_app/pages/add_page.dart';
-import 'package:expenses_control_app/pages/details_page.dart';
+import 'package:expenses_control_app/pages/details_page_container.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:expenses_control_app/login_state.dart';
@@ -17,8 +18,21 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<LoginState>(
-      create: ( BuildContext context ) => LoginState(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<LoginState>(
+          create: ( BuildContext context ) => LoginState(),
+        ),
+        ProxyProvider< LoginState, ExpensesRepository >(
+          update: ( BuildContext context, LoginState estado, ExpensesRepository bd ) {
+            if ( estado.isLoggedIn ) {
+              return  ExpensesRepository( estado.currentUser.uid );
+            }
+            return null;
+
+          }
+        )
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Expenses control',
@@ -30,7 +44,7 @@ class _MyAppState extends State<MyApp> {
             DetailsParams params = settings.arguments;
             return MaterialPageRoute(
               builder: ( BuildContext context ) {
-                return DetailsPage(
+                return DetailsPageContainer(
                   params: params
                 );
               },

@@ -1,11 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:expenses_control_app/login_state.dart';
+import 'package:expenses_control_app/expenses_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../category_selection_widget.dart';
-
 
 class AddPage extends StatefulWidget {
   final Rect buttonRect;
@@ -24,6 +22,8 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
 
   String category;
   int value = 0;
+  String dateStr = 'hoy';
+  DateTime date = DateTime.now();
 
   @override
   void initState() {
@@ -70,10 +70,28 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
               automaticallyImplyLeading: false,
               backgroundColor: Colors.transparent,
               elevation: 0.0,
-              title: Text(
-                'Category',
-                style: TextStyle(
-                  color: Colors.grey
+              title: GestureDetector(
+                onTap: () {
+                  showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now().subtract( Duration( hours: 24 * 30 ) ),
+                    lastDate: DateTime.now(),
+                  ).then(( newDate) {
+                    if ( newDate != null ) {
+                      setState(() {
+                        date = newDate;
+                        dateStr = "${date.year.toString()}-${date.month.toString().padLeft(2,'0')}-${date.day.toString().padLeft(2,'0')}";
+                      });
+                      print( date );
+                    }
+                  });
+                },
+                child: Text(
+                  'Category ( $dateStr )',
+                  style: TextStyle(
+                    color: Colors.grey
+                  ),
                 ),
               ),
               centerTitle: false,
@@ -85,7 +103,6 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
                   ),
                   onPressed: () {
                     _controller.reverse();
-                    // Navigator.of(context).pop();
                   }
                 )
               ],
@@ -270,13 +287,6 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
             ),
           ),
         );
-        // child: Container(
-        //   width: double.infinity,
-        //   decoration: BoxDecoration(
-        //     borderRadius: BorderRadius.circular( buttonWidth * ( 1 - _buttonAnimation.value ) ),
-        //     color: Colors.blueAccent
-        //   ),
-        // )
     } else {
       return Positioned(
         top: widget.buttonRect.top,
@@ -299,22 +309,10 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
                   ),
                 ),
                 onPressed: () {
-                  var user = Provider.of<LoginState>(context, listen: false).currentUser;
-                  var today = DateTime.now();
+                  var db = Provider.of<ExpensesRepository>( context, listen: false );
                   if ( value > 0 && category != null ) {
-                    Firestore.instance
-                      .collection( 'users' )
-                      .document( user.uid )
-                      .collection( 'expenses' )
-                      .document()
-                      .setData({
-                        'category': category,
-                        'value': value / 100.0,
-                        'month': today.month,
-                        'day': today.day,
-                        'year': today.year
-                      });
-                      Navigator.of( context ).pop();
+                    db.add( category, value / 100.0, date );
+                    Navigator.of( context ).pop();
                   } else {
                       showDialog(
                         context: context,
@@ -329,9 +327,6 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
                             )
                           ],                       )
                       );
-                      // Scaffold.of(context).showSnackBar(
-                      //   SnackBar( content: Text( 'Enter a value and select a category' ) )
-                      // );
                     }
                 }
               )
@@ -341,5 +336,4 @@ class _AddPageState extends State<AddPage> with SingleTickerProviderStateMixin {
       );
     }
   }
-
 }

@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expenses_control_app/graph_widget.dart';
-import 'package:expenses_control_app/pages/details_page.dart';
+import 'package:expenses_control_app/pages/details_page_container.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
